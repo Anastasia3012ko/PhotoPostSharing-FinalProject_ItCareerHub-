@@ -1,8 +1,8 @@
 import express from 'express';
-import connectToDatabase from './config/db.js';
-import cors from "cors";
-import authRoutes from './routes/authRoutes.js';
-import cookieParser from "cookie-parser";
+import connectToDatabase from './src/config/db.js';
+import cors from 'cors';
+import authRoutes from './src/routes/authRoutes.js';
+import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -17,25 +17,29 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 const corsOptions = {
-  origin: "http://localhost:3003", // frontend
+  origin: 'http://localhost:3003', // frontend
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true,
 };
 
 app.use(cors(corsOptions));
 
 app.get('/', (_req, res) => {
-    res.send('HomePage');
-})
+  res.send('HomePage');
+});
 
 //Routes
 app.use('/auth', authRoutes);
 
 // Start server
 app.listen(PORT, async () => {
-     try {
-        await connectToDatabase();
-        console.log(`Server running on http://localhost:${PORT}`);
-    } catch (error) {
-        console.error('Failed to start the server due to MongoDB connection issue', error);
-    }
+  try {
+    await connectToDatabase();
+    console.log(`Server running on http://localhost:${PORT}`);
+  } catch (error) {
+    console.error(
+      'Failed to start the server due to MongoDB connection issue',
+      error
+    );
+  }
 });
