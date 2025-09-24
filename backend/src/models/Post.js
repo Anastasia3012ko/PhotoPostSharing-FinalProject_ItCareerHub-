@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 const postSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }, 
-  photo_url: { type: String, required: true }, 
+  photo: { type: mongoose.Schema.Types.ObjectId, ref: 'Image', required: true },
   description: { type: String, default: '' },
   likes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }], // пользователи, которые лайкнули
   comments: [{

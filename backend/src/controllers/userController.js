@@ -1,5 +1,6 @@
 import User from '../models/User.js';
 import Follow from '../models/Follow.js';
+import { uploadSinglePhoto } from "../utils/s3.js";
 
 export const getUserById = async (req, res) => {
   try {
@@ -17,29 +18,38 @@ export const getUserById = async (req, res) => {
 export const updateUser = async (req, res) => {
   try {
     const { userId } = req.params;
-    const { username, fullName, bio, avatar_url, website_url } = req.body;
+    const { userName, fullName, bio, website } = req.body;
+    const file = req.file; // multer
+
     if (req.userId !== userId) {
       return res.status(403).json({ message: 'Forbidden: you can update only your profile' });
     }
-    
+
     const updateData = {};
-    if (username) updateData.username = username;
+    if (userName) updateData.userName = userName;
     if (fullName) updateData.fullName = fullName;
     if (bio) updateData.bio = bio;
-    if (avatar_url) updateData.avatar_url = avatar_url;
-    if (website_url) updateData.website_url = website_url;
+    if (website) updateData.website = website;
+
+    if (file) {
+      const avatarImage = await uploadSinglePhoto(file, userId, "avatars");
+      updateData.avatar = avatarImage._id;
+    }
 
     const updatedUser = await User.findByIdAndUpdate(
       userId,
       { $set: updateData },
       { new: true, runValidators: true }
-    ).select('-password'); 
+    )
+    .select('-password')
+    .populate('avatar'); 
 
     res.json({ message: 'Profile updated', user: updatedUser });
   } catch (error) {
-    res.status(500).json({message: 'Server error', error: error.message });
+    console.error(error);
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
-}
+};
 
 export const followToUserById = async (req, res) => {
   try {

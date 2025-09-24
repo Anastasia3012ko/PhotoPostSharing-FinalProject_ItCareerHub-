@@ -30,10 +30,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: '',
   },
-  avatar_url: { 
-    type: String, 
-    default: '' 
-  },
+  avatar: { type: mongoose.Schema.Types.ObjectId, ref: 'Image'},
   followers: [{ 
     type: mongoose.Schema.Types.ObjectId, 
     ref: 'User' 
