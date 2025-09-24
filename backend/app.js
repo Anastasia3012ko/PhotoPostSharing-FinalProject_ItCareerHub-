@@ -2,6 +2,8 @@ import express from 'express';
 import connectToDatabase from './src/config/db.js';
 import cors from 'cors';
 import authRoutes from './src/routes/authRoutes.js';
+import userRoutes from './src/routes/userRoutes.js';
+import postRoutes from './src/routes/postRoutes.js';
 import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 
@@ -29,7 +31,9 @@ app.get('/', (_req, res) => {
 });
 
 //Routes
-app.use('/auth', authRoutes);
+app.use('/api/auth', authRoutes);
+app.use ('/api/users', userRoutes);
+app.use('/api/posts', postRoutes);
 
 // Start server
 app.listen(PORT, async () => {
