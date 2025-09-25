@@ -58,7 +58,7 @@ export const loginUser = async (req, res) => {
       sameSite: 'Strict', //защита от CSRF
       maxAge: 1000 * 60 * 60 * 24, // 1 day in ms
     });
-    res.json({ message: 'User logged in successfully', token });
+    res.json({ message: 'User logged in successfully' });
   } catch (error) {
     console.error('Error with login user');
     res.status(500).json({ error: 'Server error with login user', error: error.message});
