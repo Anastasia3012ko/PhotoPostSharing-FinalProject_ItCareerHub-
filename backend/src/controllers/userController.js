@@ -7,20 +7,41 @@ import mongoose from 'mongoose';
 
 export const getUserById = async (req, res) => {
   try {
-    const { userId } = req.params;
+    const userId = req.params.id;
 
     if (!mongoose.Types.ObjectId.isValid(userId)) {
       return res.status(400).json({ message: 'Invalid user Id' });
     }
 
     const user = await User.findById(userId)
-      .select('-password')
-      .populate('avatar');
+      .select('-password -resetCode -resetCodeExpires')
+      .populate({ path: 'avatar', select: 'url filename' })
+      .populate({
+        path: 'followers',
+        populate: {
+          path: 'follower',
+          select: 'fullName userName avatar',
+          populate: { path: 'avatar', select: 'url filename' },
+        },
+      })
+      .populate({
+        path: 'following',
+        populate: {
+          path: 'following',
+          select: 'fullName userName avatar',
+          populate: { path: 'avatar', select: 'url filename' },
+        },
+      })
+      .populate({
+        path: 'posts',
+        select: 'description createdAt',
+        populate: { path: 'photo', select: 'url filename' },
+      });
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
     const postCount = await Post.countDocuments({ user: userId });
-    res.json(user, postCount);
+    res.json({ user, postCount });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
@@ -42,10 +63,10 @@ export const updateUser = async (req, res) => {
         .json({ message: 'Forbidden: you can update only your profile' });
     }
 
-    const user = await User.findById(userId).populate("avatar");
+    const user = await User.findById(userId).populate('avatar');
 
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(404).json({ message: 'User not found' });
     }
 
     const updateData = {};
@@ -53,12 +74,13 @@ export const updateUser = async (req, res) => {
     if (fullName) updateData.fullName = fullName;
     if (about) {
       if (about.length > 150) {
-        return res.status(400).json({ message: 'About cannot exceed 150 characters' });
+        return res
+          .status(400)
+          .json({ message: 'About cannot exceed 150 characters' });
       }
       updateData.about = about;
     }
     if (website) updateData.website = website;
-
 
     if (file) {
       if (user.avatar && user.avatar.filename) {
@@ -82,33 +104,5 @@ export const updateUser = async (req, res) => {
   } catch (error) {
     console.error('Error with updating user profile');
     res.status(500).json({ message: 'Server error', error: error.message });
-  }
-};
-
-export const followToUserById = async (req, res) => {
-  try {
-    const { followerId } = req.body;
-    const { userId } = req.params;
-
-    const follow = new Follow({ follower: followerId, following: userId });
-    await follow.save();
-
-    res.status(201).json({ message: 'Now following' });
-  } catch (error) {
-    if (error.code === 11000) {
-      return res.status(400).json({ message: 'Already following' });
-    }
-    res.status(500).json({ message: 'Server error', error: error.message });
-  }
-};
-
-export const getFollowers = async (req, res) => {
-  try {
-    const followers = await Follow.find({
-      following: req.params.userId,
-    }).populate('follower', 'username avatar_url');
-    res.json(followers);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
   }
 };

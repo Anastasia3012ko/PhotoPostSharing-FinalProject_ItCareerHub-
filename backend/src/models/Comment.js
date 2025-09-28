@@ -9,5 +9,15 @@ const commentSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// Хуки для обновления счётчика комментариев
+commentSchema.post('save', async function () {
+  await mongoose.model('Post').updateOne({ _id: this.post }, { $inc: { commentsCount: 1 } });
+});
+
+commentSchema.post('remove', async function () {
+  await mongoose.model('Post').updateOne({ _id: this.post }, { $inc: { commentsCount: -1 } });
+});
+
 const Comment = mongoose.model('Comment', commentSchema);
+
 export default Comment;

@@ -1,17 +1,32 @@
 import express from 'express';
+import http from 'http';
 import connectToDatabase from './src/config/db.js';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
+
 import authRoutes from './src/routes/authRoutes.js';
 import userRoutes from './src/routes/userRoutes.js';
 import postRoutes from './src/routes/postRoutes.js';
-import cookieParser from 'cookie-parser';
-import dotenv from 'dotenv';
+import followRoutes from './src/routes/followRoutes.js';
+import likeRoutes from './src/routes/likeRoutes.js';
 
+import { initSocket } from './src/socket/socket.js';
+
+//only test
+import path from "path";
+import { fileURLToPath } from "url";
+
+import dotenv from 'dotenv';
 dotenv.config();
 
-const PORT = process.env.PORT;
+const PORT = process.env.PORT  || 3000;
 
 const app = express();
+const server = http.createServer(app); // HTTP-server for Express + Socket.IO
+
+const __filename = fileURLToPath(import.meta.url);//only test
+const __dirname = path.dirname(__filename); //only test
+app.use(express.static(path.join(__dirname, "public"))); //only test
 
 // Middleware
 app.use(express.json());
@@ -34,9 +49,14 @@ app.get('/', (_req, res) => {
 app.use('/api/auth', authRoutes);
 app.use ('/api/users', userRoutes);
 app.use('/api/posts', postRoutes);
+app.use('/api/follow', followRoutes);
+app.use('/api/like', likeRoutes)
+
+// Socket.IO
+initSocket(server);
 
 // Start server
-app.listen(PORT, async () => {
+server.listen(PORT, async () => {
   try {
     await connectToDatabase();
     console.log(`Server running on http://localhost:${PORT}`);

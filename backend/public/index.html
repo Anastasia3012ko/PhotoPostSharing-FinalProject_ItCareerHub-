@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chat with Socket.IO</title>
+  <link rel="stylesheet" href="./styles.css" />
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+</head>
+<body>
+  <div id="wrapper">
+    <h1>Chat:</h1>
+    <div class="container">
+      <ul id="messages"></ul>
+      <form id="formSendMessage">
+        <input type="text" id="inputMessage" placeholder="Type your message..." />
+        <button type="submit">Send</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // connect with server
+    const socket = io("http://localhost:3000", { withCredentials: true });
+
+    // DOM elements
+    const form = document.getElementById("formSendMessage");
+    const input = document.getElementById("inputMessage");
+    const messagesList = document.getElementById("messages");
+
+    // username
+    const userName = prompt("Enter your name:") || "Anonymous";
+    const room = "chat1"; // Например, одна общая комната
+
+    // connect with room
+    socket.emit("joinRoom", { room: "Chat 1", user: userName });
+
+    socket.on("roomHistory", (messages) => {
+      messagesList.innerHTML = ""; // clear message list
+      messages.forEach((msg) => {
+        const li = document.createElement("li");
+        li.textContent = `${msg.sender}: ${msg.text}`;
+        messagesList.appendChild(li);
+      });
+    });
+
+    // receive new message
+    socket.on("message", (msg) => {
+      const li = document.createElement("li");
+      li.textContent = `${msg.sender}: ${msg.text}`;
+      messagesList.appendChild(li);
+    });
+
+    // send new message
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const text = input.value.trim();
+      if (!text) return;
+
+      socket.emit("message", { room, sender: userName, text });
+      input.value = "";
+    });
+  </script>
+</body>
+</html>
